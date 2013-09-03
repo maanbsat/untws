@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
-"""
-connection.py
 
-Created by Maan Bsat on 2013-09-02.
-Copyright (c) 2013 Maan Bsat. All rights reserved.
-"""
+# connection.py
+# 
+# Created by Maan Bsat on 2013-09-02.
+# Copyright (c) 2013 Maan Bsat. All rights reserved.
 
 from Queue import Queue
 from random import randint
@@ -31,6 +30,9 @@ class IBConnection(object):
         self._messages.put(msg)
 
     def get_current_time(self):
+        """
+        Returns the current TWS server time, as a *datetime.date* object.
+        """
         self.connection.register(self._process_message, message.currentTime)
         self.connection.reqCurrentTime()
         msg = self._messages.get()
@@ -39,6 +41,9 @@ class IBConnection(object):
         return datetime.fromtimestamp(msg.time)
         
     def get_positions(self):
+        """
+        Returns a list of positions.
+        """
         self.connection.register(self._process_message, 'UpdatePortfolio', 'AccountDownloadEnd')
         self.connection.reqAccountUpdates(1, '')
         out = []

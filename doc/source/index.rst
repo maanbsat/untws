@@ -16,6 +16,11 @@ Welcome to untws's documentation!
     :members:
 .. automodule:: untws.connection
     :members:
+.. automodule:: untws.position
+    :members:
+.. automodule:: untws.instrument
+    :members:
+
 
 Indices and tables
 ==================

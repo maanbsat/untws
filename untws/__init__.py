@@ -11,7 +11,7 @@
 """
 
 import os
-from connection import IBConnection
+from untws.connection import IBConnection
 
 __all__ = ['ib_connect']
 

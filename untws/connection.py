@@ -11,7 +11,7 @@ from random import randint
 from datetime import datetime
 import ib.opt
 from ib.opt import message
-from position import Position
+from untws.position import Position
 
 class IBConnection(object):
     """This is the core object which represents a connection to IB."""
@@ -27,6 +27,7 @@ class IBConnection(object):
         self._messages = Queue()
     
     def _process_message(self, msg):
+        """Callback for ibpy"""
         self._messages.put(msg)
 
     def get_current_time(self):
@@ -44,7 +45,11 @@ class IBConnection(object):
         """
         Returns a list of positions.
         """
-        self.connection.register(self._process_message, 'UpdatePortfolio', 'AccountDownloadEnd')
+        self.connection.register(
+            self._process_message,
+            'UpdatePortfolio',
+            'AccountDownloadEnd'
+        )
         self.connection.reqAccountUpdates(1, '')
         out = []
         while True:
@@ -64,7 +69,11 @@ class IBConnection(object):
                 msg.unrealizedPNL
             ))
         self.connection.reqAccountUpdates(0, '')
-        self.connection.unregister(self._process_message, 'UpdatePortfolio', 'AccountDownloadEnd')
+        self.connection.unregister(
+            self._process_message,
+            'UpdatePortfolio',
+            'AccountDownloadEnd'
+        )
         return out
         
 if __name__ == '__main__':

@@ -6,7 +6,8 @@ untws
 Introduction
 ------------
 
-The goal of this Python library is to provide a *well-documented*, more *Pythonic way* to access Interactive Brokers TWS. The excellent
+The goal of this Python library is to provide a *well-documented*, more
+*Pythonic way* to access Interactive Brokers TWS. The excellent
 [IbPy](https://github.com/blampe/IbPy) library already provides access to TWS,
 and it mimics the Java API, which is event-driven and asynchronous. untws uses
 IbPy behind the scenes to provide a more direct (i.e. synchronous) access,

@@ -12,5 +12,5 @@ from distutils.core import setup
 setup(
     name='untws',
     version='0.1',
-    packages=['untws'],
+    packages=['untws']
 )

@@ -16,8 +16,26 @@ which is more suitable for *scripts and other non-GUI tools*.
 Requirements
 ------------
 
-untws requires [IbPy](https://github.com/blampe/IbPy) (it is developed using
-the latest version found on GitHub).
+untws requires [IbPy](https://github.com/blampe/IbPy). Install it with:
+
+    $ wget https://github.com/blampe/IbPy/archive/master.zip
+    $ unzip master.zip
+    $ cd IbPy-master/
+    
+    # to install it in the system libraries
+    $ python setup.py.in install
+    
+    # to install it for the current user only:
+    $ python setup.py.in install --user
+
+> Sadly, IbPy cannot be used with pip in its current state.
+
+Installation
+------------
+
+Install the latest untws directly with pip:
+
+    $ pip install https://github.com/maanbsat/untws/archive/master.zip
 
 Quick Howto
 -----------
@@ -31,12 +49,25 @@ Quick Howto
     
     con.get_current_time()
     con.get_positions()
+    
+    # get market data
+    stk = con.create_stock('IBM')
+    mkt_data = con.get_market_data(stk)
+    
+    # access fields directly
+    mkt_data.last
+    mkt_data.bid
+    mkt_data.ask
+    
+    # same for options
+    opt = con.create_option_ticker('IBM   130921P00180000')
+    mkt_data = con.get_market_data(opt)
 
 Todo
 ----
 
 * Functionality
-    * Retrieve market data
+    * Retrieve hitorical data
     * Create orders
 * Add documentation
 * Expand the Todo list

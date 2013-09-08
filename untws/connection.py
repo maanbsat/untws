@@ -13,7 +13,7 @@ import ib.opt
 from ib.opt import message
 from ib.ext.Contract import Contract
 from untws.position import Position
-from untws.market_data import MarketDataQuote
+from untws.market_data import *
 
 MKT_DATA_FIELDS = {
     1: 'bid',
@@ -22,6 +22,13 @@ MKT_DATA_FIELDS = {
     6: 'high',
     7: 'low',
     9: 'close'
+}
+
+OPT_DATA_FIELDS = {
+    10: 'bid',
+    11: 'ask',
+    12: 'last',
+    13: 'model'
 }
 
 class IBConnection(object):
@@ -95,25 +102,47 @@ class IBConnection(object):
         self.connection.register(
             self._process_message,
             message.tickPrice,
-            message.tickSnapshotEnd
+            message.tickSnapshotEnd,
+            message.tickOptionComputation
         )
+        # request a "non-subscription" market data quote
         self.connection.reqMktData(1, instrument, '', True)
         data = {}
         while True:
             msg = self._messages.get()
             if isinstance(msg, message.tickSnapshotEnd):
                 break
-            assert isinstance(msg, message.tickPrice)
-            if msg.field not in MKT_DATA_FIELDS:
-                # we ignore fields that we don't know of
-                continue
-            data[MKT_DATA_FIELDS[msg.field]] = msg.price
+            elif isinstance(msg, message.tickPrice):
+                if msg.field not in MKT_DATA_FIELDS:
+                    # we ignore fields that we don't know of
+                    continue
+                data[MKT_DATA_FIELDS[msg.field]] = msg.price
+            elif isinstance(msg, message.tickOptionComputation):
+                if msg.field not in OPT_DATA_FIELDS:
+                    # we ignore fields that we don't know of
+                    continue
+                opt = MarketDataQuoteBase({
+                    'price': msg.optPrice,
+                    'delta': msg.delta,
+                    'gamma': msg.gamma,
+                    'vega': msg.vega,
+                    'theta': msg.theta,
+                    'underlying_price': msg.undPrice,
+                    'pv_dividends': msg.pgDividend,
+                    'implied_vol': msg.impliedVol
+                })
+                if 'option' not in data:
+                    data['option'] = OptionDataQuote({
+                        OPT_DATA_FIELDS[msg.field]: MarketDataQuoteBase(opt)
+                    })
+            else:
+                raise Exception("Unexpected message type: %s" % msg.typeName)
         self.connection.unregister(
             self._process_message,
             message.tickPrice,
             message.tickSnapshotEnd
         )
-        return MarketDataQuote(instrument, data)
+        return MarketDataQuoteInstrument(instrument, data)
     
     def create_stock(self, ticker, currency='USD', exchange='SMART'):
         c = Contract()

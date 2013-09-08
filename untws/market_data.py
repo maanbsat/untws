@@ -36,7 +36,7 @@ class MarketDataQuoteBase(object):
 
 class MarketDataQuoteInstrument(MarketDataQuoteBase):
     def __init__(self, instrument, data_points):
-        super(MarketDataQuoteInstrument, self).__init__(self, data_points)
+        super(MarketDataQuoteInstrument, self).__init__(data_points)
         self._instrument = instrument
 
     @property
@@ -46,7 +46,7 @@ class MarketDataQuoteInstrument(MarketDataQuoteBase):
 
 class OptionDataQuote(MarketDataQuoteBase):
     def __init__(self, data_points):
-        super(OptionDataQuote, self).__init__(self, data_points)
+        super(OptionDataQuote, self).__init__(data_points)
 
     @property
     def mid(self):

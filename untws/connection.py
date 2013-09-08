@@ -140,7 +140,8 @@ class IBConnection(object):
         self.connection.unregister(
             self._process_message,
             message.tickPrice,
-            message.tickSnapshotEnd
+            message.tickSnapshotEnd,
+            message.tickOptionComputation
         )
         return MarketDataQuoteInstrument(instrument, data)
     

@@ -108,6 +108,7 @@ class IBConnection(object):
         # request a "non-subscription" market data quote
         self.connection.reqMktData(1, instrument, '', True)
         data = {}
+        opts = {}
         while True:
             msg = self._messages.get()
             if isinstance(msg, message.tickSnapshotEnd):
@@ -121,20 +122,16 @@ class IBConnection(object):
                 if msg.field not in OPT_DATA_FIELDS:
                     # we ignore fields that we don't know of
                     continue
-                opt = MarketDataQuoteBase({
+                opts[OPT_DATA_FIELDS[msg.field]] = MarketDataQuoteBase({
                     'price': msg.optPrice,
                     'delta': msg.delta,
                     'gamma': msg.gamma,
                     'vega': msg.vega,
                     'theta': msg.theta,
                     'underlying_price': msg.undPrice,
-                    'pv_dividends': msg.pgDividend,
+                    'pv_dividends': msg.pvDividend,
                     'implied_vol': msg.impliedVol
                 })
-                if 'option' not in data:
-                    data['option'] = OptionDataQuote({
-                        OPT_DATA_FIELDS[msg.field]: MarketDataQuoteBase(opt)
-                    })
             else:
                 raise Exception("Unexpected message type: %s" % msg.typeName)
         self.connection.unregister(
@@ -143,6 +140,8 @@ class IBConnection(object):
             message.tickSnapshotEnd,
             message.tickOptionComputation
         )
+        if len(opts) > 0:
+            data['option'] = OptionDataQuote(opts)
         return MarketDataQuoteInstrument(instrument, data)
     
     def create_stock(self, ticker, currency='USD', exchange='SMART'):

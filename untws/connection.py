@@ -9,6 +9,7 @@
 from Queue import Queue
 from random import randint
 from datetime import datetime
+import logging
 import ib.opt
 from ib.opt import message
 from ib.ext.Contract import Contract
@@ -34,9 +35,32 @@ OPT_DATA_FIELDS = {
 class IBConnection(object):
     """This is the core object which represents a connection to IB."""
 
-    def __init__(self, host, port):
+    # frequencies for use with get_historical_data
+    FREQ_1SEC = '1 sec'
+    FREQ_5SEC = '5 secs'
+    FREQ_15SEC = '15 secs'
+    FREQ_30SEC = '30 secs'
+    FREQ_1MIN = '1 min'
+    FREQ_2MIN = '2 mins'
+    FREQ_3MIN = '3 mins'
+    FREQ_5MIN = '5 mins'
+    FREQ_15MIN = '15 mins'
+    FREQ_30MIN = '30 mins'
+    FREQ_HOURLY = '1 hour'
+    FREQ_DAILY = '1 day'
+    
+    # data types to use with get_historical_data
+    HISTO_LAST = 'TRADES'
+    HISTO_MID = 'MIDPOINT'
+    HISTO_BID = 'BID'
+    HISTO_ASK = 'ASK'
+    HISTO_BID_ASK = 'BID_ASK'
+    HISTO_HVOL = 'HISTORICAL_VOLATILITY'
+    HISTO_IMP_VOL = 'OPTION_IMPLIED_VOLATILITY'
+    
+    def __init__(self, hostname, port):
         self.connection = ib.opt.ibConnection(
-            host=host,
+            host=hostname,
             port=port,
             clientId=randint(1000, 99999)
         )
@@ -46,6 +70,7 @@ class IBConnection(object):
     
     def _process_message(self, msg):
         """Callback for ibpy"""
+        logging.debug("Message received: %s" % msg.typeName)
         self._messages.put(msg)
 
     def get_current_time(self):
@@ -144,6 +169,36 @@ class IBConnection(object):
             data['option'] = OptionDataQuote(opts)
         return MarketDataQuoteInstrument(instrument, data)
     
+    def get_historical_data(self, instrument, from_datetime,
+        to_datetime=datetime.now(), frequency=FREQ_DAILY,
+        data=HISTO_LAST, extended_hours=False):
+        self.connection.register(
+            self._process_message,
+            message.historicalData
+        )
+        self.connection.reqHistoricalData(
+            1,
+            instrument,
+            to_datetime.strftime('%Y%m%d %H:%M:%S'),
+            '%d S' % int((to_datetime - from_datetime).total_seconds()),
+            frequency,
+            data,
+            0 if extended_hours else 1,
+            1
+        )
+        out = []
+        while True:
+            msg = self._messages.get()
+            assert msg.typeName == 'historicalData'
+            if msg.date.startswith('finished'):
+                break
+            out.append(msg)
+        self.connection.unregister(
+            self._process_message,
+            message.historicalData
+        )
+        return out
+        
     def create_stock(self, ticker, currency='USD', exchange='SMART'):
         c = Contract()
         c.m_secType = 'STK'

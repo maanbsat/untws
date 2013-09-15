@@ -34,4 +34,7 @@ def ib_connect(hostname=None, port=None):
             port = os.environ['IB_PORT']
         else:
             port = 7496
-    return IBConnection(hostname, port)
+    return IBConnection(
+        hostname=hostname,
+        port=port
+    )

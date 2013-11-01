@@ -15,6 +15,7 @@ from ib.opt import message
 from ib.ext.Contract import Contract
 from untws.position import Position
 from untws.market_data import *
+from untws.historical_data import HistoricalDataPoint
 
 MKT_DATA_FIELDS = {
     1: 'bid',
@@ -176,11 +177,20 @@ class IBConnection(object):
             self._process_message,
             message.historicalData
         )
+        
+        duration = int((to_datetime - from_datetime).total_seconds())
+        if frequency == self.FREQ_DAILY:
+            duration = '%d D' %  (duration // (60 * 60 * 24))
+        else:
+            duration = '%d S' % duration
+        duration = '6 M'
+        print('duration = "%s"' % duration)
+        
         self.connection.reqHistoricalData(
             1,
             instrument,
             to_datetime.strftime('%Y%m%d %H:%M:%S'),
-            '%d S' % int((to_datetime - from_datetime).total_seconds()),
+            duration,
             frequency,
             data,
             0 if extended_hours else 1,
@@ -192,7 +202,7 @@ class IBConnection(object):
             assert msg.typeName == 'historicalData'
             if msg.date.startswith('finished'):
                 break
-            out.append(msg)
+            out.append(HistoricalDataPoint(msg))
         self.connection.unregister(
             self._process_message,
             message.historicalData

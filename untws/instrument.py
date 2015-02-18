@@ -15,6 +15,10 @@ def create_instrument(connection, instrument):
         return Stock(connection, instrument)
     elif instrument.m_secType == 'OPT':
         return StockOption(connection, instrument)
+    elif instrument.m_secType == 'FUT':
+        return Futures(connection, instrument)
+    elif instrument.m_secType == 'FOP':
+        return FuturesOption(connection, instrument)
     else:
         raise Exception(
             "Do not know how to handle instrument of type %s: %s" % \
@@ -82,6 +86,77 @@ class StockOption(Instrument):
     @property
     def underlying(self):
         """The underlying equity ticker"""
+        return self._underlying
+        
+    @property
+    def contract_size(self):
+        """The contract size (i.e. multiplier)"""
+        return self._contract_size
+
+    @property
+    def option_type(self):
+        """The option type ('call' or 'put')"""
+        return self._option_type
+        
+    @property
+    def strike_price(self):
+        """The option's strike price"""
+        return self._strike_price
+        
+    @property
+    def expiration_date(self):
+        """The option's expiration date"""
+        return self._expiration_date
+
+class Futures(Instrument):
+    """Represents a futures (IB sectype: FUT)"""
+    
+    def __init__(self, connection, instrument):
+        super(Futures, self).__init__(connection, instrument)
+        self._underlying = instrument.m_symbol
+        self._point_value = instrument.m_multiplier
+        self._expiration_date = datetime.strptime(
+            instrument.m_expiry,
+            '%Y%m%d'
+        ).date()
+    
+    @property
+    def underlying(self):
+        """The futures' underlying"""
+        return self._underlying
+        
+    @property
+    def point_value(self):
+        """The point value (i.e. multiplier)"""
+        return self._point_value
+
+    @property
+    def option_type(self):
+        """The futures' type ('call' or 'put')"""
+        return self._option_type
+        
+    @property
+    def expiration_date(self):
+        """The futures expiration date"""
+        return self._expiration_date
+
+class FuturesOption(Instrument):
+    """Represents a futures option (IB sectype: FOP)"""
+    
+    def __init__(self, connection, instrument):
+        super(FuturesOption, self).__init__(connection, instrument)
+        self._underlying = instrument.m_symbol
+        self._point_value = instrument.m_multiplier
+        self._option_type = 'call' if instrument.m_right == 'C' else 'put'
+        self._strike_price = instrument.m_strike
+        self._expiration_date = datetime.strptime(
+            instrument.m_expiry,
+            '%Y%m%d'
+        ).date()
+    
+    @property
+    def underlying(self):
+        """The underlying ticker"""
         return self._underlying
         
     @property
